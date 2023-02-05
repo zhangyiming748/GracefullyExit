@@ -1,4 +1,4 @@
-module gihub.com/zhangyiming748/GracefullyExit
+module github.com/zhangyiming748/GracefullyExit
 
 go 1.19
 
