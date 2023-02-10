@@ -10,7 +10,7 @@ import (
 
 // go test -v -cover -run TestExitAfterRun unit_test.go GracefullyExit.go
 func TestExitAfterRun(t *testing.T) {
-	ExitAfterRun(circle, last, exitInfo)
+	ExitAfterRun(circle, exitInfo)
 }
 func exitInfo() {
 	log.Debug.Println("开始退出...")
@@ -26,7 +26,4 @@ func circle() {
 		fmt.Println("休眠了:", sum, "秒")
 		time.Sleep(1 * time.Second)
 	}
-}
-func last() {
-	log.Debug.Println("退出命令之后的程序")
 }
