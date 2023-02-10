@@ -2,7 +2,22 @@
 
 优雅的退出go程序
 **在终端执行的程序才会生效**
-
+# 示例
+```go
+func work() {
+	for {
+		log.Debug.Println("程序开始运行")
+		time.Sleep(time.Second)
+	}
+}
+func last() {
+	log.Debug.Println("监听到退出信号之后的程序")
+	os.Exit(0)
+}
+func main() {
+	GracefullyExit.ExitAfterRun(work, last)
+}
+```
 每个平台的信号定义或许有些不同。下面列出了POSIX中定义的信号。
 Linux 使用34-64信号用作实时系统中。
 命令man 7 signal提供了官方的信号介绍。
