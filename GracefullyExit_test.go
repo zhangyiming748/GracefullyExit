@@ -2,12 +2,14 @@
 package GracefullyExit
 
 import (
+	"log"
 	"testing"
 	"time"
-	"log"
 )
 
-func TestExitChecker_ShouldExitAfterAtomicOperation(t *testing.T) {}
+func TestExitChecker_ShouldExitAfterAtomicOperation(t *testing.T) {
+	main()
+}
 
 func main() {
 	ec := New()

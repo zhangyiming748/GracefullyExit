@@ -9,7 +9,7 @@ import (
 
 // ExitChecker 结构体，持有通道和goroutine管理
 type ExitChecker struct {
-	ch   chan string // 通道用于传输输入字符串
+	ch   chan string   // 通道用于传输输入字符串
 	done chan struct{} // 用于停止输入goroutine
 	wg   sync.WaitGroup
 }
