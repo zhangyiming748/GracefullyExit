@@ -1,5 +1,3 @@
 module github.com/zhangyiming748/GracefullyExit
 
-go 1.19
-
-require github.com/zhangyiming748/log v0.0.4
+go 1.26.1
