@@ -2,9 +2,11 @@ package GracefullyExit
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 // ExitChecker 结构体，持有通道和goroutine管理
@@ -48,6 +50,8 @@ func (ec *ExitChecker) ShouldExit(quitStr string) bool {
 	case input := <-ec.ch:
 		return input == quitStr // 如果收到且匹配，返回true
 	default:
+		fmt.Println("按q可以安全退出")
+		time.Sleep(30 * time.Second)
 		return false // 通道空，无需退出
 	}
 }
