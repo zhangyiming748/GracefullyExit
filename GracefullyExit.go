@@ -29,6 +29,7 @@ func New() *ExitChecker {
 
 // listenInput 函数A：阻塞从stdin读取字符串，并发送到通道
 func (ec *ExitChecker) listenInput() {
+	go msg()
 	defer ec.wg.Done()
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -50,8 +51,6 @@ func (ec *ExitChecker) ShouldExit(quitStr string) bool {
 	case input := <-ec.ch:
 		return input == quitStr // 如果收到且匹配，返回true
 	default:
-		fmt.Println("按q可以安全退出")
-		time.Sleep(30 * time.Second)
 		return false // 通道空，无需退出
 	}
 }
@@ -61,4 +60,17 @@ func (ec *ExitChecker) Stop() {
 	close(ec.done)
 	ec.wg.Wait()
 	close(ec.ch)
+}
+
+/*
+这里单独一个函数 准备使用 go 关键字以协程方式启动
+循环在控制台打印fmt.Println("输入q安全退出")
+输出一次sleep30秒
+*/
+
+func msg(){
+	for {
+		fmt.Println("输入q安全退出")
+		time.Sleep(30 * time.Second)
+	}
 }
