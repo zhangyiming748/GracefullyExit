@@ -23,9 +23,9 @@ func New() *ExitChecker {
 		ch:   make(chan string, 1), // 使用缓冲通道，避免阻塞
 		done: make(chan struct{}),
 	}
-	ec.wg.Add(2)              // 两个 goroutine
-	go ec.listenInput()       // 启动函数A：阻塞读取输入
-	go ec.startReminder()     // 启动提示 goroutine
+	ec.wg.Add(2)          // 两个 goroutine
+	go ec.listenInput()   // 启动函数A：阻塞读取输入
+	go ec.startReminder() // 启动提示 goroutine
 	return ec
 }
 
