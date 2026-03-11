@@ -1,89 +1,101 @@
-# 程序功能
+# GracefullyExit - 优雅退出工具
 
-为其他程序提供原子操作形式的退出
-即在原子操作过程中即使输入了退出信号 也在当前这轮原子操作之后再交由主程序判断后退出
+## 功能说明
 
-## 程序大纲
+为 Go 程序提供简单优雅的退出机制，支持在原子操作过程中响应退出信号，确保当前操作完成后再退出，避免中途终止导致状态不一致。
 
-1. 创建一个通道 C，用来传输字符串
-2. 创建一个函数 A，阻塞接收字符串
-3. 另一个函数 B 循环检测通道中是否有可以接收的字符串
-4. 如果接收到字符串，这个函数返回 true 否则返回 false
+## 核心特性
 
-## 代码逻辑说明
+- **原子性保障**：即使收到退出信号，也等待当前原子操作完成后再退出
+- **简单易用**：仅需两个函数即可实现退出检测
+- **轻量级设计**：无外部依赖，仅使用 Go 标准库
+- **控制台交互**：通过简单的键盘输入触发退出
 
-### 核心组件
+## API 说明
 
-1. **ExitChecker 结构体**
-   - `ch`: 无缓冲通道，用于传输用户输入的字符串
-   - `done`: 控制通道，用于通知所有 goroutine 停止
-   - `wg`: WaitGroup，等待所有 goroutine 完成
-   - `stopOnce`: sync.Once，确保 Stop() 只执行一次
+### `StartReceivedExit()`
 
-2. **New() 函数**
-   - 创建 ExitChecker 实例
-   - 初始化通道和同步原语
-   - 启动两个 goroutine：
-     - `listenInput()`: 监听用户输入
-     - `startReminder()`: 每 30 秒打印退出提示
+启动退出监听功能，在后台 goroutine 中阻塞监听控制台输入。
 
-3. **listenInput() 函数**
-   - 使用 bufio.Scanner 从标准输入读取
-   - 去除输入字符串的前后空格
-   - 非阻塞发送输入到通道（通道满时丢弃）
-   - 每次读取后检查 done 信号，实现优雅退出
-   - 处理 scanner 错误
+**特点：**
+- 非阻塞调用，可独立启动
+- 监听用户输入"q"触发退出信号
+- 设置全局退出标志位
 
-4. **ShouldExit() 函数**
-   - 非阻塞检查通道
-   - 如果通道中有输入且匹配退出字符串，返回 true
-   - 否则立即返回 false
+### `ShouldExit() bool`
 
-5. **startReminder() 函数**
-   - 使用 Ticker 每 30 秒触发一次
-   - 打印"输入 q 安全退出"提示
-   - 监听 done 信号，可被中断
+检查是否收到退出信号。
 
-6. **Stop() 函数**
-   - 使用 sync.Once 确保只关闭一次
-   - 关闭 done 通道，通知所有 goroutine
-   - 等待所有 goroutine 完成
-   - 关闭数据通道
+**返回值：**
+- `true`: 已收到退出信号
+- `false`: 未收到退出信号
 
-### 线程安全保证
+**使用建议：**
+- 在原子操作完成后调用
+- 配合循环结构实现优雅退出
 
-- 所有通道操作由 Go runtime 保证线程安全
-- sync.Once 防止重复关闭导致的 panic
-- WaitGroup 确保资源正确释放
+## 使用示例
 
-## 调用方法
-
-```golang
+```go
 package main
 
 import (
     "fmt"
     "time"
-
-    "github.com/zhangyiming748/GracefullyExit" // 替换为实际路径
+    
+    "github.com/zhangyiming748/GracefullyExit"
 )
 
 func main() {
-    ge := exitchecker.New()
-    defer ge.Stop() // 程序结束时清理
-
+    // 启动退出监听（后台运行）
+    go GracefullyExit.StartReceivedExit()
+    
     // 模拟原子操作循环
     for i := 0; i < 10; i++ {
-        // 执行原子操作（这里模拟耗时工作）
-        fmt.Printf("Performing atomic operation %d...\n", i)
-        time.Sleep(1 * time.Second) // 模拟工作
-
+        // 执行原子操作（模拟耗时工作）
+        fmt.Printf("执行原子操作 %d...\n", i)
+        time.Sleep(1 * time.Second)
+        
         // 操作结束后检查是否退出
-        if ge.ShouldExit("q") {
-            fmt.Println("Exit signal received. Quitting after current operation.")
+        if GracefullyExit.ShouldExit() {
+            fmt.Println("收到退出信号，安全退出")
             break
         }
     }
-    fmt.Println("Program exited gracefully.")
+    
+    fmt.Println("程序已优雅退出")
 }
 ```
+
+## 运行说明
+
+1. **运行程序**
+   ```bash
+   go run main.go
+   ```
+
+2. **查看提示**
+   - 程序每 30 秒显示一次退出提示
+   - 提示："按 q 可以安全退出"
+
+3. **触发退出**
+   - 在控制台输入 `q` 并按回车
+   - 程序将在当前原子操作完成后退出
+
+## 代码结构
+
+```
+GracefullyExit/
+├── GracefullyExit.go      # 核心实现
+│   ├── StartReceivedExit()  # 启动退出监听
+│   ├── ShouldExit()         # 检查退出状态
+│   └── alert()              # 定时提示函数
+├── GracefullyExit_test.go # 测试文件
+└── README.md              # 文档说明
+```
+
+## 注意事项
+
+- 输入"q"后需要按回车键确认
+- 退出信号是全局的，一旦触发将影响整个程序
+- 建议在程序入口启动监听功能
